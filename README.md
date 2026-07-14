@@ -1,4 +1,4 @@
-# Phobos Skills
+# Phobos3 Framework - Skills
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mongoose-studio/phobos-framework/main/phobos-banner-dark.png">
