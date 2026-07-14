@@ -1,0 +1,19 @@
+{
+  "name": "mongoose-studio",
+  "description": "Plugins de Mongoose Studio para Claude Code. Herramientas de desarrollo para el ecosistema Phobos Framework.",
+  "owner": {
+    "name": "Mongoose Studio",
+    "email": "marcelrojas16@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "phobos",
+      "source": "./plugins/phobos",
+      "description": "Backends y APIs REST con Phobos Framework 3: scaffolding, generadores y la forma canónica del framework.",
+      "version": "1.2.0",
+      "author": {
+        "name": "Marcel Rojas"
+      }
+    }
+  ]
+}
