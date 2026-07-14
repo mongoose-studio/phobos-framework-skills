@@ -1,9 +1,9 @@
 # Phobos Skills
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="phobos-banner-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="phobos-banner.png">
-  <img alt="Phobos Framework" height="64px" src="phobos-banner-dark.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/mongoose-studio/phobos-framework/main/phobos-banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/mongoose-studio/phobos-framework/main/phobos-banner.png">
+  <img alt="Phobos Framework" height="64px" src="https://raw.githubusercontent.com/mongoose-studio/phobos-framework/main/phobos-banner-dark.png">
 </picture>
 
 Plugin de [Claude Code](https://claude.com/claude-code) para construir backends y APIs con **[Phobos Framework 3](https://github.com/mongoose-studio/phobos-framework)** (PHP 8.4+).
