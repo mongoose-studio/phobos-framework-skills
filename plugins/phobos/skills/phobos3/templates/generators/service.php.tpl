@@ -3,6 +3,7 @@
 namespace {{NAMESPACE}}\Services;
 
 use {{NAMESPACE}}\Entities\{{SCHEMA}}\{{TABLE}};
+use PhobosFramework\Database\Support\Uuid;
 use PhobosFramework\Exceptions\NotFoundException;
 
 /**
@@ -19,8 +20,8 @@ class {{MODULE}}Service {
      * @return {{TABLE}}[]
      */
     public function list(int $page = 1, int $perPage = 20): array {
-        // CUIDADO con los parámetros 3 y 4 de find(): se llaman $limitFrom/$limitTo
-        // pero son (limit, offset). Pasar (0, 20) genera LIMIT 0 y devuelve vacío.
+        // Los parámetros 3 y 4 de find() son (limit, offset): "cuántos" y
+        // "saltando cuántos". Pasar (0, 20) genera LIMIT 0 y devuelve [] sin error.
         return {{TABLE}}::find(
             ['is_active = ?' => 1],
             'created_at DESC',
@@ -35,7 +36,7 @@ class {{MODULE}}Service {
 
     public function create(object $data): {{TABLE}} {
         $item = new {{TABLE}}();
-        $item->uuid = bin2hex(random_bytes(16));
+        $item->uuid = Uuid::v7();   // UUIDv7 del framework: ordenado por tiempo, índices contiguos
         // $item->nombre = $data->nombre;
         $item->created_at = date('Y-m-d H:i:s');
         $item->save();

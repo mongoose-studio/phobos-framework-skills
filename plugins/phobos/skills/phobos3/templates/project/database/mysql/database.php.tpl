@@ -1,12 +1,18 @@
 <?php
 
 use PhobosFramework\Database\Drivers\MySQL\MySQLDriver;
-// use PhobosFramework\Database\Drivers\Postgres\PostgresDriver;
-// use PhobosFramework\Database\Drivers\SQLite\SQLiteDriver;
 
-// La conexión 'main' de abajo es para MySQL. Para PostgreSQL o SQLite cambia el bloque
-// de 'connections' (ver forma exacta en la referencia de la capa de datos) y registra
-// el driver correspondiente en 'drivers'.
+/*
+ * Configuración de MySQL / MariaDB.
+ *
+ * Las tres claves de primer nivel son obligatorias:
+ *   default     → la conexión que se usa cuando no se pide otra
+ *   connections → los datos de cada conexión
+ *   drivers     → mapea el nombre del driver a su clase; sin esto,
+ *                 'driver' => 'mysql' no resuelve a nada
+ *
+ * En MySQL "schema" y "base de datos" son lo mismo.
+ */
 
 return [
     'default' => env('DB_CONNECTION', 'main'),
@@ -30,14 +36,12 @@ return [
                 PDO::ATTR_TIMEOUT => 5,
             ],
 
+            // Variables de sesión (SET SESSION ...), si el proyecto las necesita.
             'session_variables' => [],
         ],
     ],
 
-    // Sin esta sección, 'driver' => 'mysql' no resuelve a ninguna clase.
     'drivers' => [
         'mysql' => MySQLDriver::class,
-        // 'pgsql'  => PostgresDriver::class,
-        // 'sqlite' => SQLiteDriver::class,
     ],
 ];

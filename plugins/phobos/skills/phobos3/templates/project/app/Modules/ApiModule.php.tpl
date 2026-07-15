@@ -26,6 +26,9 @@ class ApiModule implements ModuleInterface {
             'timestamp' => microtime(true),
         ])->name('health');
 
+        // Documentación (si generaste el DocsModule): Swagger UI en /docs.
+        // $router->module('/docs', DocsModule::class);
+
         // Módulos de dominio. Ejemplo:
         // $router->group(['prefix' => '/v1', 'middleware' => AuthMiddleware::class], function (Router $router) {
         //     $router->module('/ventas', VentasModule::class);

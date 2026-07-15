@@ -13,7 +13,7 @@ Enseña la forma canónica del framework, levanta proyectos completos desde cero
 ## Instalación
 
 ```
-/plugin marketplace add mongoose-studio/phobos-skills
+/plugin marketplace add mongoose-studio/phobos-framework-skills
 /plugin install phobos@mongoose-studio
 ```
 
@@ -27,7 +27,7 @@ La skill se activa sola cuando Claude detecta que estás trabajando en un proyec
 /phobos:phobos3
 ```
 
-**Proyecto nuevo.** Pídeselo en lenguaje natural: *"créame una API con Phobos para gestionar pedidos"*. Claude va a preguntarte el nombre y el namespace, los datos de la base, si necesitas autenticación y qué extras quieres, y con eso genera el proyecto completo: entry point, config, módulo raíz, CORS, `.env.example` y script de desarrollo.
+**Proyecto nuevo.** Pídeselo en lenguaje natural: *"créame una API con Phobos para gestionar pedidos"*. Claude va a preguntarte el nombre y el namespace, los datos de la base, si necesitas autenticación y qué extras quieres, y con eso genera el proyecto completo: entry point, config, módulo raíz, CORS, `.env.example`, script de desarrollo, un kit de pruebas PHPUnit listo para correr (`composer test`), CI de GitHub Actions y la documentación de la API en `docs/openapi.yaml` (con opción de servir Swagger UI en `/docs`).
 
 **Agregar cosas a un proyecto existente.** *"agrega un módulo de facturas"*, *"crea la entidad clientes"*, *"necesito un middleware que valide el tenant"*. Claude detecta la estructura real del proyecto y se adapta a ella.
 
@@ -39,20 +39,36 @@ plugins/phobos/skills/phobos3/
 ├── references/
 │   ├── core.md               # routing, módulos, DI, middleware, request/response
 │   ├── database.md           # entidades, query builder, transacciones
+│   ├── testing.md            # PHPUnit: cómo se prueba una app Phobos
+│   ├── api-docs.md           # OpenAPI: cómo se documenta una app Phobos
 │   └── anti-patterns.md      # los errores que se repiten
 └── templates/
     ├── project/              # esqueleto completo de un proyecto
-    └── generators/           # module, controller, entity, service, middleware, provider
+    │   └── database/         # config + .env por motor: mysql | postgres | sqlite
+    ├── testing/              # kit de PHPUnit: bases, bootstrap, schema, ejemplos
+    ├── docs/                 # openapi.yaml sembrado + README
+    └── generators/           # module, controller, entity, service, middleware, provider, test
 ```
 
 Las referencias están verificadas contra el código fuente de los paquetes, no contra la documentación.
+
+### Portabilidad a otros agentes
+
+El plugin es la entrega nativa para Claude Code (auto-activación, `/phobos:phobos3`). Para usar el
+mismo conocimiento desde **Codex u otro agente**, la raíz del repo trae un [`AGENTS.md`](AGENTS.md):
+un índice delgado con las reglas no-negociables y punteros a las referencias/templates para carga
+on-demand. No hay que rehacer nada — el contenido (referencias + templates) es agnóstico de
+herramienta; solo cambia el envoltorio. El `AGENTS.md` también sirve como memoria de proyecto para
+Claude Code cuando trabajas dentro de un repo Phobos sin el plugin cargado.
+
+Cada motor tiene su propia carpeta bajo `templates/project/database/`: el proyecto generado recibe un `config/database.php` completo y correcto para **su** motor, no una plantilla con drivers comentados. Las claves no son intercambiables entre motores (SQLite no tiene `host` ni `username`; PostgreSQL no tiene `collation`; MySQL no tiene `search_path`), y el skill lo respeta.
 
 ## Versiones cubiertas
 
 | Paquete | Versión |
 |---|---|
-| `mongoose-studio/phobos-framework` | 3.2.0 |
-| `mongoose-studio/phobos-framework-database` | 3.2.0 |
+| `mongoose-studio/phobos-framework` | 3.3.0 |
+| `mongoose-studio/phobos-framework-database` | 3.2.1 |
 | `mongoose-studio/phobos-framework-database-mysql` | 3.2.0 |
 | `mongoose-studio/phobos-framework-database-sqlite` | 3.2.0 |
 | `mongoose-studio/phobos-framework-database-postgres` | 3.2.0 |

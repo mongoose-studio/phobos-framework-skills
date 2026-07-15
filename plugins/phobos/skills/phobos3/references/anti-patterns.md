@@ -69,6 +69,12 @@ public function create(object $data)  // ✓
 
 **Paginar con `find($where, $order, $desde, $hasta)`.** Los parámetros 3 y 4 son **limit** y **offset**, en ese orden — no "desde/hasta". `find($w, $o, 0, 20)` produce `LIMIT 0` y devuelve `[]` sin lanzar nada: parece que la tabla está vacía. Lo correcto es `find($w, $o, $perPage, ($page - 1) * $perPage)`.
 
+**Fabricar el UUID a mano.** `bin2hex(random_bytes(16))` no es un UUID: son 32 hex sin guiones, sin bits de versión y sin orden temporal. El framework ya trae `PhobosFramework\Database\Support\Uuid::v7()` — y si el UUID *es* la PK, ni eso: `protected static string $keyStrategy = "uuidv7";` y el framework lo genera solo.
+
+**Un `config/database.php` con varios drivers comentados.** Un proyecto usa un motor. Las claves ni siquiera son intercambiables: SQLite no tiene `host` ni `username`; PostgreSQL no tiene `collation`; MySQL no tiene `search_path`. Un archivo por motor, con las claves de ese motor. Si el proyecto migra, se reemplaza el archivo entero.
+
+**Ignorar `composer.lock`.** En una **aplicación** el lock se commitea: es lo único que garantiza que producción instale las mismas versiones que probaste. (En una **librería** sí se ignora — de ahí viene la confusión.) Sin lock, un `composer install` puede traerte una minor distinta a la que el código asume.
+
 **Interpolar variables en SQL.**
 
 ```php
@@ -114,6 +120,15 @@ public function __construct(private SSOService $sso) {}   // ✓ el autowiring y
 **Commitear el `.env`.** Va en `.gitignore` siempre. Se comparte `.env.example` con valores de ejemplo, nunca con credenciales reales.
 
 **`env()` regado por todo el código.** El `.env` alimenta a `config/`; el código lee `config('database.connections.main.host')`. Así un solo archivo describe la configuración y se puede sobreescribir en tiempo de ejecución.
+
+**Usar un booleano del `.env` sin castearlo, en un proyecto que sigue en 3.2.x.** Ahí `env()` devuelve strings, y `"false"` es truthy en PHP: un `'debug' => env('APP_DEBUG', false)` queda encendido **siempre**, aunque el `.env` diga `false`. No falla, simplemente miente. Es el mismo bug que emite `Access-Control-Allow-Credentials: true` con `CORS_SUPPORTS_CREDENTIALS=false` — y con `allowed_origins='*'` eso le abre la API, con cookies, a cualquier sitio.
+
+3.3.0 lo corrigió en el framework, pero castea igual en `config/`: es portable entre versiones y no cuesta nada.
+
+```php
+'debug' => filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOL), // ✓ correcto en cualquier versión
+'port'  => (int)env('DB_PORT', 3306),                                 // ✓ los números NO los castea ni 3.3.0
+```
 
 ## PHP
 

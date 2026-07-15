@@ -63,42 +63,56 @@ return [
 
 Las tres claves de primer nivel — `default`, `connections`, `drivers` — son obligatorias. `drivers` mapea nombre → clase; sin él, `'driver' => 'mysql'` no resuelve a nada.
 
-### El mismo `drivers`/`connections` para otros motores
+### Cada motor entiende sus propias claves
+
+No son intercambiables: pasarle `charset` a SQLite o `collation` a PostgreSQL no hace nada, y omitir las que sí importan sí duele. Un proyecto usa **un** motor; su `config/database.php` declara **un** driver.
+
+**MySQL / MariaDB.** `host`, `port`, `database`, `username`, `password`, `charset`, `collation`, `strict` (modo estricto, por defecto `true`), `timezone`, `options` (atributos PDO), `session_variables` (un `SET SESSION` por entrada), `unix_socket` (alternativa a host/port).
+
+**PostgreSQL.** Como MySQL en lo básico (`host`, `port`, `database`, `username`, `password`, `options`), más lo suyo:
+
+```php
+'main' => [
+    'driver'           => 'pgsql',
+    'host'             => env('DB_HOST', '127.0.0.1'),
+    'port'             => env('DB_PORT', 5432),
+    'database'         => env('DB_DATABASE'),
+    'username'         => env('DB_USERNAME'),
+    'password'         => env('DB_PASSWORD'),
+    'schema'           => env('DB_SCHEMA', 'public'),   // un schema...
+    // 'search_path'   => 'app,public',                 // ...o varios; search_path gana sobre schema
+    'timezone'         => 'UTC',
+    'client_encoding'  => 'UTF8',                        // no existe SET NAMES aquí
+    'application_name' => env('APP_NAME'),               // sale en los logs y en pg_stat_activity
+    'sslmode'          => 'prefer',                      // disable|allow|prefer|require|verify-ca|verify-full
+],
+```
+
+El driver valida `sslmode`, `timezone` y cada nombre de schema del `search_path` contra una whitelist: un valor inválido lanza `ConfigurationException` al conectar, no SQL roto más tarde.
+
+**SQLite.** No tiene servidor: **no hay `host`, ni `port`, ni `username`, ni `password`, ni `charset`**. Lo que se ajusta, se ajusta con PRAGMAs:
+
+```php
+'main' => [
+    'driver'       => 'sqlite',
+    'database'     => env('DB_DATABASE', storage_path('database.sqlite')),  // o ':memory:'
+    'foreign_keys' => true,     // SQLite las trae APAGADAS; el driver las enciende salvo que pongas false
+    'journal_mode' => 'WAL',    // DELETE|TRUNCATE|PERSIST|MEMORY|WAL|OFF
+    'busy_timeout' => 5000,     // ms de espera ante un bloqueo
+    'synchronous'  => 'NORMAL', // OFF|NORMAL|FULL|EXTRA
+],
+```
+
+Las claves foráneas apagadas por defecto es *la* sorpresa de SQLite: sin `foreign_keys`, una FK inválida se inserta sin chistar. Y el aislamiento es SERIALIZABLE nativo — solo se puede relajar a READ UNCOMMITTED; pedir cualquier otro nivel lanza excepción.
+
+Y en `drivers`, solo el que usas:
 
 ```php
 use PhobosFramework\Database\Drivers\Postgres\PostgresDriver;
 use PhobosFramework\Database\Drivers\SQLite\SQLiteDriver;
 
-'drivers' => [
-    'mysql'  => MySQLDriver::class,
-    'pgsql'  => PostgresDriver::class,
-    'sqlite' => SQLiteDriver::class,
-],
-```
-
-**PostgreSQL** — conexión con schema real (`search_path`); a diferencia de MySQL, el schema no es la base de datos:
-
-```php
-'main' => [
-    'driver'      => 'pgsql',
-    'host'        => env('DB_HOST', '127.0.0.1'),
-    'port'        => env('DB_PORT', 5432),
-    'database'    => env('DB_DATABASE'),
-    'username'    => env('DB_USERNAME'),
-    'password'    => env('DB_PASSWORD'),
-    'schema'      => env('DB_SCHEMA', 'public'),   // o 'search_path' => 'app,public'
-    // 'sslmode'  => 'require',                      // opcional
-    // 'timezone' => 'UTC',                          // opcional
-],
-```
-
-**SQLite** — ideal para desarrollo local y tests; solo necesita la ruta del archivo (o `:memory:`):
-
-```php
-'main' => [
-    'driver'   => 'sqlite',
-    'database' => env('DB_DATABASE', storage_path('database.sqlite')),  // o ':memory:'
-],
+'drivers' => ['pgsql'  => PostgresDriver::class],
+'drivers' => ['sqlite' => SQLiteDriver::class],
 ```
 
 ## Entidades
@@ -180,6 +194,16 @@ protected static string $keyStrategy = "manual";   // la app asigna el valor
 - `uuidv7` genera claves ordenadas por tiempo (índices contiguos, sin round-trip). La columna PK debe ser `uuid` (PostgreSQL), `CHAR(36)` (MySQL) o `TEXT` (SQLite).
 - En PostgreSQL, `auto` lee el id con `INSERT ... RETURNING`; en MySQL/SQLite con `lastInsertId()`. Es transparente: `save()` deja el id en la propiedad igual.
 - Un PK ya asignado **siempre gana**: se persiste tal cual, sin generar ni releer.
+
+Para una columna UUID que **no** es la PK (el típico `uuid` público junto al `id` interno), el generador está expuesto y se llama a mano:
+
+```php
+use PhobosFramework\Database\Support\Uuid;
+
+$pedido->uuid = Uuid::v7();
+```
+
+No lo improvises con `bin2hex(random_bytes(16))`: eso son 32 caracteres hex, no un UUID — sin guiones, sin bits de versión y sin orden temporal.
 
 `CURRENT_TIMESTAMP` es una constante definida en `public/index.php`, no una función de SQL.
 
@@ -286,6 +310,8 @@ La capa cita automáticamente los identificadores en las posiciones estructurale
 Métodos: `select`, `distinct`, `from`, `where`, `orWhere`, `join`, `innerJoin`, `leftJoin`, `rightJoin`, `groupBy`, `having`, `orderBy`, `limit`, `offset`, `union`, `unionAll`, `whereSubQuery`, `whereExists`, `whereNotExists`, `asSubQuery`, `fromSubQuery`.
 
 Ejecución: `fetch()` (array de filas), `fetchFirst()` (una fila o null), `fetchColumn()` (un valor escalar).
+
+Con `PDO::FETCH_OBJ` (lo que configura el `config/database.php` del skeleton), las filas de `fetch()`/`fetchFirst()` son `stdClass`, no arrays: accede con `->columna`. `fetchColumn()` (y por lo tanto `count()`/`exists()`) requiere **phobos-framework-database ≥ 3.2.1**; en 3.2.0 revientan con ese fetch mode ("Cannot use object of type stdClass as array").
 
 Escrituras sueltas, cuando la entidad no aporta:
 

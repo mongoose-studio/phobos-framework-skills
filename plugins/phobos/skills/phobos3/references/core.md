@@ -219,6 +219,27 @@ Lanzar la excepción es preferible a construir un `Response::error()` a mano: el
 
 Los archivos de `config/` pueden usar `env()` — es el patrón normal: el `.env` alimenta a `config/`, y el código lee `config()`.
 
+### Qué castea `env()` y qué no
+
+**Desde 3.3.0**, `env()` convierte `true`, `false`, `null` y `empty` a su tipo nativo (insensible a mayúsculas). **Los números no**: un `"007"` no es `7` y un `"1.0"` de versión no es el float `1.0`, así que se mantienen como texto a propósito.
+
+```php
+'debug' => env('APP_DEBUG', false),   // bool real desde 3.3.0
+'port'  => (int)env('DB_PORT', 3306), // los números SÍ hay que castearlos
+```
+
+Y el valor por defecto se aplica **solo si la variable no existe**. Un `DB_PASSWORD=` vacío devuelve `''`, no el default: si el usuario lo escribió, es lo que quiso decir.
+
+> **En 3.2.0 y anteriores `env()` no casteaba nada**, y como en PHP el string `"false"` es *truthy*, un `APP_DEBUG=false` dejaba el debug encendido para siempre — y un `CORS_SUPPORTS_CREDENTIALS=false` igual emitía la cabecera de credenciales. Si trabajas sobre un proyecto que aún está en 3.2.x, ese bug está vivo.
+
+Por eso, en `config/`, castear defensivamente sigue siendo lo correcto: **funciona igual con el string y con el tipo nativo**, así que el mismo archivo es válido en cualquier versión.
+
+```php
+'debug' => filter_var(env('APP_DEBUG', false), FILTER_VALIDATE_BOOL),   // ✓ portable
+```
+
+El casteo va en `config/`, una sola vez, no regado por el código.
+
 ## Helpers globales
 
 `phobos()`, `container()`, `request()`, `response()`, `route($name, $params)`, `inject($class)`, `singleton()`, `bind()`, `instance()`, `env()`, `config()`, `base_path()` (raíz), `app_path()`, `config_path()`, `storage_path()`, `public_path()`, `url()`, `abort()`, `dd()`, `dump()`, `dpre()`, `trace()`, `blank()`, `filled()`, `tap()`, `value()`, `with()`, `collect()`, `is_dev()`, `is_prod()`, `phobos_version()`.

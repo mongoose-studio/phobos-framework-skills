@@ -10,11 +10,15 @@ use {{NAMESPACE}}\Middleware\CorsMiddleware;
 use {{NAMESPACE}}\Modules\ApiModule;
 use PhobosFramework\Core\Phobos;
 use PhobosFramework\Exceptions\HttpException;
-use PhobosFramework\Exceptions\NotFoundException;
 
 /*
  * Phobos no trae manejador global de errores: run() re-lanza cualquier excepción.
  * Este try/catch es el único punto donde se traducen a JSON.
+ *
+ * HttpException cubre a TODAS las excepciones HTTP del framework
+ * (NotFoundException, UnauthorizedException, ValidationException...): todas
+ * heredan de ella y todas se serializan con su toArray(). No hace falta un
+ * catch por cada una.
  */
 try {
     Phobos::init(ROOT, APPLICATION)
@@ -24,14 +28,6 @@ try {
         ->bootstrap(ApiModule::class)
         ->run()
         ->send();
-} catch (NotFoundException $e) {
-    http_response_code(404);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'error' => 'Not Found',
-        'message' => $e->getMessage(),
-        'status_code' => 404,
-    ]);
 } catch (HttpException $e) {
     http_response_code($e->getStatusCode());
     header('Content-Type: application/json');

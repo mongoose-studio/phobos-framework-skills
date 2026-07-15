@@ -1,7 +1,7 @@
 {
   "name": "phobos",
   "description": "Construye backends y APIs REST con Phobos Framework 3 (PHP 8.4+): scaffolding de proyectos, generadores de módulos, controllers, entidades y middleware, y la forma canónica del framework. Soporta MySQL, SQLite y PostgreSQL.",
-  "version": "1.2.0",
+  "version": "1.6.0",
   "author": {
     "name": "Marcel Rojas",
     "email": "marcelrojas16@gmail.com"

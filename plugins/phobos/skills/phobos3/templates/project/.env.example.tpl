@@ -5,16 +5,7 @@ APP_ENV=development
 APP_DEBUG=true
 APP_URL=http://localhost:{{PORT}}
 
-# Database
-DB_CONNECTION=main
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE={{DB_DATABASE}}
-DB_USERNAME=root
-DB_PASSWORD=
-DB_CHARSET=utf8mb4
-DB_COLLATION=utf8mb4_unicode_ci
-DB_TIMEZONE=-04:00
+{{DB_ENV}}
 
 # CORS
 CORS_ALLOWED_ORIGINS=*

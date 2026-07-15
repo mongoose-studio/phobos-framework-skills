@@ -31,7 +31,15 @@ class CorsMiddleware implements MiddlewareInterface {
             'Access-Control-Allow-Headers' => $allowedHeaders,
         ];
 
-        if ($supportsCredentials && $allowOrigin !== '*') {
+        /*
+         * Credenciales SOLO con una lista blanca explícita de orígenes.
+         *
+         * Con allowed_origins='*' este middleware refleja el Origin de quien llame;
+         * sumarle Allow-Credentials permitiría que CUALQUIER sitio hiciera peticiones
+         * con las cookies del usuario contra esta API. La lista blanca no es opcional
+         * aquí: es lo único que hace segura la combinación.
+         */
+        if ($supportsCredentials && $allowedOrigins !== '*' && $allowOrigin !== '') {
             $headers['Access-Control-Allow-Credentials'] = 'true';
         }
 

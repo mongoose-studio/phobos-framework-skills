@@ -17,11 +17,15 @@ use PhobosFramework\Database\Entity\TableEntity;
  */
 class {{TABLE}} extends TableEntity {
 
-    public static ?string $schema = "{{SCHEMA}}";   // ?string: nullable. null => lo resuelve el motor (search_path)
+    // ?string, nullable. MySQL: el schema es la base. PostgreSQL: un schema real.
+    // SQLite: NO tiene schemas — deja null y el nombre lo resuelve el motor.
+    public static ?string $schema = "{{SCHEMA}}";
     public static string $entity = "{{TABLE}}";
     public static array $pk = ["id"];
 
     // Estrategia de PK (opcional): "auto" (por defecto) | "uuidv7" | "manual"
+    // Con "uuidv7" el framework genera el id en PHP antes del INSERT, ordenado
+    // por tiempo. La columna PK debe ser uuid (PG), CHAR(36) (MySQL) o TEXT (SQLite).
     // protected static string $keyStrategy = "uuidv7";
 
     // Casteo de columnas (opcional): json | bool | int | float | datetime
